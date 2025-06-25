@@ -8,7 +8,7 @@ ConnectionInfo conn;
 SshClient sshClient;
 
 string ipAddress = "191.252.222.248";
-string keyFilePath = "C:\\Users\\redto\\OneDrive\\Documentos\\repositories\\Engineering\\pc\\hmi_monitor\\HMI_Monitor\\ConsoleApp\\bin\\Debug\\net8.0\\id_ed25519";
+string keyFilePath = ".\\rufo";
 string keyfileText = string.Empty;  
 try
 {
@@ -21,7 +21,7 @@ try
 }
 catch (IOException e)
 {
-    Console.WriteLine("HMI Monitor - The file could not be read:");
+    Console.WriteLine("HMI Monitor - .\\rufo The file could not be read:");
     Console.WriteLine(e.Message);
 }
 
@@ -45,7 +45,7 @@ try
 
         var filePath = $"./{outputFileName}.csv";
         //var filePath = $"./LOBO";
-        string headerContent = "DATETIME, CPU, RAM, HD";
+        string headerContent = "DATETIME, CPU, RAM, HD\n";
 
         Console.WriteLine(headerContent);
         File.AppendAllText(filePath, headerContent);        

@@ -1,0 +1,40 @@
+#!/bin/bash
+
+STEP_TIME=${1}
+TOTAL_TIME=${2}
+
+OUTPUT="/mnt/STORAGE/MemAvailableEach${STEP_TIME}secondsFor${TOTAL_TIME}seconds.data"
+OUTPUT_DUMMY="/mnt/STORAGE/*.data"
+
+
+if [ -f $OUTPUT ] ; then
+   echo "Removing old: ${OUTPUT} file..."
+   rm ${OUTPUT_DUMMY}
+fi 
+
+MAX_STEPS=$(( $TOTAL_TIME / $STEP_TIME ))
+
+for ((i=1; i<= MAX_STEPS; i++)) ; do
+   MEM_AVAILABLE_GREP=$(grep "MemAvailable*" /proc/meminfo)
+
+   MEM_AVAILABLE_END=${MEM_AVAILABLE_GREP#*:}
+   MEM_AVAILABLE_NOUNIT=${MEM_AVAILABLE_END%* kB}
+   MEM_AVAILABLE_VALUE_kB=${MEM_AVAILABLE_NOUNIT##* }
+   MEM_AVAILABLE_VALUE_MB=$(($MEM_AVAILABLE_VALUE_kB/1024))
+
+   echo "${i} ${MEM_AVAILABLE_VALUE_MB}"
+   echo "${i} ${MEM_AVAILABLE_VALUE_MB}" >> ${OUTPUT}
+
+   sleep $STEP_TIME
+done
+
+
+#echo "CPU $(
+#    top -bn1 | grep 'Cpu(s)' | \
+#    sed 's/.*, *\([0-9.]*\)%* id.*/\1/' | \
+#    awk '{print 100 - $1}'
+#)% RAM $(
+#    free -m | awk '/Mem:/ { printf("%3.1f%%", $3/$2*100) }'
+#) HDD $(
+#    df -h / | awk '/\// {print $(NF-1)}'
+#)"
