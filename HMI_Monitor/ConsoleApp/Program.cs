@@ -10,10 +10,6 @@ SshClient sshClient;
 string ipAddress = "191.252.222.248";
 string keyFilePath = "C:\\Users\\redto\\OneDrive\\Documentos\\repositories\\Engineering\\pc\\hmi_monitor\\HMI_Monitor\\ConsoleApp\\bin\\Debug\\net8.0\\id_ed25519";
 
-string cpuConsumptionResult = string.Empty;
-string ramConsumptionResult = string.Empty;
-string hdConsumptionResult = string.Empty;
-
 try
 {
     // Open the text file using a stream reader.
@@ -40,24 +36,27 @@ try
     using (sshClient = new SshClient(conn))
     {
         sshClient.Connect();
+        var dateTime = System.DateTime.Now;
+        string outputFileName = dateTime.Year+"_"+dateTime.Month+"_"+dateTime.Day+"At"+dateTime.Hour+"_"+dateTime.Minute+"_"+dateTime.Second;
+        var dateTimeValue = System.DateTime.Now.ToString().Replace("/","_").Replace(":","_");
+
+        var filePath = $"./{outputFileName}.csv";
+        //var filePath = $"./LOBO";
+        string content = "DATETIME, CPU, RAM, HD";
+
+        File.AppendAllText(filePath, content + Environment.NewLine);
+
         
-        var result = sshClient.RunCommand("echo \"CPU $(top -bn1 | grep 'Cpu(s)' | sed 's/.*, *\\([0-9.]*\\)%* id.*/\\1/' | awk '{print 100 - $1}')% RAM $(free -m | awk '/Mem:/ { printf(\"%3.1f%%\", $3/$2*100) }') HDD $(df -h / | awk '/\\// {print $(NF-1)}')\"");
-        cpuConsumptionResult = sshClient.RunCommand("echo \"$(top -bn1 | grep 'Cpu(s)' | sed 's/.*, *\\([0-9.]*\\)%* id.*/\\1/' | awk '{print 100 - $1}')%\"").Result;
-        ramConsumptionResult = sshClient.RunCommand("echo \"RAM $(free -m | awk '/Mem:/ { printf(\"%3.1f%%\", $3/$2*100) }')\"").Result;
-        hdConsumptionResult = sshClient.RunCommand("echo \"HDD $(df -h / | awk '/\\// {print $(NF-1)}')\"").Result;
 
-        while (result.Result == string.Empty)
+        Console.WriteLine("Press any key to stop the loop...");
+        while (!Console.KeyAvailable)
         {
-            await Task.Delay(1000);
-            Console.WriteLine(" - Waiting");
-        }
-
-        Console.WriteLine("Command Output:");
-        Console.WriteLine(result.Result);
-        Console.WriteLine(cpuConsumptionResult);
-        Console.WriteLine(ramConsumptionResult);
-        Console.WriteLine(hdConsumptionResult);
-
+            var result = sshClient.RunCommand("echo \"$(top -bn1 | grep 'Cpu(s)' | sed 's/.*, *\\([0-9.]*\\)%* id.*/\\1/' | awk '{print 100 - $1}')%, $(free -m | awk '/Mem:/ { printf(\"%3.1f%%\", $3/$2*100) }'), $(df -h / | awk '/\\// {print $(NF-1)}')\"");
+            var dateTimeX = System.DateTime.Now.ToString();
+            Console.WriteLine(result.Result);
+            File.AppendAllText(filePath, dateTimeX + ", " + result.Result + Environment.NewLine);
+            await Task.Delay(1000);            
+        }        
     }
 }
 catch(Exception e) {
