@@ -9,7 +9,7 @@ SshClient sshClient;
 
 string ipAddress = "191.252.222.248";
 string keyFilePath = "C:\\Users\\redto\\OneDrive\\Documentos\\repositories\\Engineering\\pc\\hmi_monitor\\HMI_Monitor\\ConsoleApp\\bin\\Debug\\net8.0\\id_ed25519";
-
+string keyfileText = string.Empty;  
 try
 {
     // Open the text file using a stream reader.
@@ -17,6 +17,7 @@ try
 
     // Read the stream as a string.
     string text = reader.ReadToEnd();
+    keyfileText = reader.ReadToEnd();
 }
 catch (IOException e)
 {
@@ -25,13 +26,15 @@ catch (IOException e)
 }
 
 try
-{
+{    
     conn = new ConnectionInfo(ipAddress, 22, "root", new AuthenticationMethod[]{
                     new PrivateKeyAuthenticationMethod("root", new PrivateKeyFile[]
                     { new PrivateKeyFile(keyFilePath) }),
-                });
+                });    
 
     Console.WriteLine("HMI Monitor - Connection OK");
+
+    Console.WriteLine("\nPress any key to stop the loop...");
 
     using (sshClient = new SshClient(conn))
     {
@@ -42,19 +45,20 @@ try
 
         var filePath = $"./{outputFileName}.csv";
         //var filePath = $"./LOBO";
-        string content = "DATETIME, CPU, RAM, HD";
+        string headerContent = "DATETIME, CPU, RAM, HD";
 
-        File.AppendAllText(filePath, content + Environment.NewLine);
+        Console.WriteLine(headerContent);
+        File.AppendAllText(filePath, headerContent);        
 
-        
-
-        Console.WriteLine("Press any key to stop the loop...");
         while (!Console.KeyAvailable)
         {
-            var result = sshClient.RunCommand("echo \"$(top -bn1 | grep 'Cpu(s)' | sed 's/.*, *\\([0-9.]*\\)%* id.*/\\1/' | awk '{print 100 - $1}')%, $(free -m | awk '/Mem:/ { printf(\"%3.1f%%\", $3/$2*100) }'), $(df -h / | awk '/\\// {print $(NF-1)}')\"");
             var dateTimeX = System.DateTime.Now.ToString();
-            Console.WriteLine(result.Result);
-            File.AppendAllText(filePath, dateTimeX + ", " + result.Result + Environment.NewLine);
+            var result = sshClient.RunCommand("echo \"$(top -bn1 | grep 'Cpu(s)' | sed 's/.*, *\\([0-9.]*\\)%* id.*/\\1/' | awk '{print 100 - $1}')%, $(free -m | awk '/Mem:/ { printf(\"%3.1f%%\", $3/$2*100) }'), $(df -h / | awk '/\\// {print $(NF-1)}')\"");
+            
+            string outputLine = dateTimeX + ", " + result.Result;
+            
+            Console.Write(outputLine);
+            File.AppendAllText(filePath, outputLine);
             await Task.Delay(1000);            
         }        
     }
