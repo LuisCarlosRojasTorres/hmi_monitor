@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="ScottPlot.WPF" Version="5.0.56" />
     <PackageReference Include="SSH.NET" Version="2025.0.0" />
   </ItemGroup>
 

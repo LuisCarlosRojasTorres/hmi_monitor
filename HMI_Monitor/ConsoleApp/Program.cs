@@ -54,7 +54,7 @@ try
         {
             var dateTimeX = System.DateTime.Now.ToString();
             var result = sshClient.RunCommand("echo \"$(top -bn1 | grep 'Cpu(s)' | sed 's/.*, *\\([0-9.]*\\)%* id.*/\\1/' | awk '{print 100 - $1}')%, $(free -m | awk '/Mem:/ { printf(\"%3.1f%%\", $3/$2*100) }'), $(df -h / | awk '/\\// {print $(NF-1)}')\"");
-            
+            var result2 = sshClient.RunCommand("echo \"$(free -m | awk '/Mem:/ { printf(\"%3.1f%%\", $3/$2*100) }')\"");
             string outputLine = dateTimeX + ", " + result.Result;
             
             Console.Write(outputLine);
