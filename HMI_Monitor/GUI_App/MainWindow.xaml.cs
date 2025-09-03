@@ -74,26 +74,30 @@ namespace GUI_App
                     Console.WriteLine(headerContent);
                     File.AppendAllText(filePath, headerContent);
 
-                    List<double> dates = new List<double>();
-                    List<double> ram = new List<double>();
+                    List<double> dates_list = new List<double>();
+                    List<double> ram_list = new List<double>();
+                    List<double> cpu_list = new List<double>();
 
                     while (true)
                     {
                         var dateTimeX = System.DateTime.Now;
                         var result = sshClient.RunCommand("echo \"$(top -bn1 | grep 'Cpu(s)' | sed 's/.*, *\\([0-9.]*\\)%* id.*/\\1/' | awk '{print 100 - $1}')%, $(free -m | awk '/Mem:/ { printf(\"%3.1f%%\", $3/$2*100) }'), $(df -h / | awk '/\\// {print $(NF-1)}')\"");
-                        var result2 = sshClient.RunCommand("echo \"$(free -m | awk '/Mem:/ { printf(\"%3.1f%%\", $3/$2*100) }')\"");
-                        string outputLine = dateTimeX + ", " + result2.Result;
-
-                        Console.Write(outputLine);
+                        var ram = sshClient.RunCommand("echo \"$(free -m | awk '/Mem:/ { printf(\"%3.1f%%\", $3/$2*100) }')\"");
+                        var cpu = sshClient.RunCommand("echo \"$(top -bn1 | grep 'Cpu(s)' | sed 's/.*, *\\([0-9.]*\\)%* id.*/\\1/' | awk '{print 100 - $1}')\"");
+                        
+                        string outputLine = dateTimeX + ", " + result.Result;
                         File.AppendAllText(filePath, outputLine);
 
-                        double y = Convert.ToDouble(result2.Result.Remove(result2.Result.Length - 2))/10;
+                        double ram_i = Convert.ToDouble(ram.Result.Remove(ram.Result.Length - 2))/10;
+                        double cpu_i = Convert.ToDouble(cpu.Result.Remove(cpu.Result.Length - 1));
 
-                        dates.Add(dateTimeX.ToOADate());
-                        ram.Add(y);
+                        dates_list.Add(dateTimeX.ToOADate());
+                        cpu_list.Add(cpu_i);
+                        ram_list.Add(ram_i);
 
                         WpfPlot1.Plot.Clear();
-                        WpfPlot1.Plot.Add.Scatter(dates.ToArray(), ram.ToArray());
+                        WpfPlot1.Plot.Add.Scatter(dates_list.ToArray(), ram_list.ToArray());
+                        WpfPlot1.Plot.Add.Scatter(dates_list.ToArray(), cpu_list.ToArray());
                         WpfPlot1.Plot.Axes.DateTimeTicksBottom();
 
                         WpfPlot1.Refresh();
