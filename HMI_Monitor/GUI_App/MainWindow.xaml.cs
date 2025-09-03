@@ -74,9 +74,12 @@ namespace GUI_App
                     Console.WriteLine(headerContent);
                     File.AppendAllText(filePath, headerContent);
 
+                    List<double> dates = new List<double>();
+                    List<double> ram = new List<double>();
+
                     while (true)
                     {
-                        var dateTimeX = System.DateTime.Now.ToString();
+                        var dateTimeX = System.DateTime.Now;
                         var result = sshClient.RunCommand("echo \"$(top -bn1 | grep 'Cpu(s)' | sed 's/.*, *\\([0-9.]*\\)%* id.*/\\1/' | awk '{print 100 - $1}')%, $(free -m | awk '/Mem:/ { printf(\"%3.1f%%\", $3/$2*100) }'), $(df -h / | awk '/\\// {print $(NF-1)}')\"");
                         var result2 = sshClient.RunCommand("echo \"$(free -m | awk '/Mem:/ { printf(\"%3.1f%%\", $3/$2*100) }')\"");
                         string outputLine = dateTimeX + ", " + result2.Result;
@@ -84,12 +87,15 @@ namespace GUI_App
                         Console.Write(outputLine);
                         File.AppendAllText(filePath, outputLine);
 
-                        double y = Convert.ToDouble(result2.Result.Remove(result2.Result.Length - 2));
-                        ScottPlot.Coordinates point = new ScottPlot.Coordinates(counter, y);
-                        counter++;
+                        double y = Convert.ToDouble(result2.Result.Remove(result2.Result.Length - 2))/10;
 
-                        WpfPlot1.Plot.Add.Scatter(point);
-                        
+                        dates.Add(dateTimeX.ToOADate());
+                        ram.Add(y);
+
+                        WpfPlot1.Plot.Clear();
+                        WpfPlot1.Plot.Add.Scatter(dates.ToArray(), ram.ToArray());
+                        WpfPlot1.Plot.Axes.DateTimeTicksBottom();
+
                         WpfPlot1.Refresh();
                         await Task.Delay(1000);
                     }
